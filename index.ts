@@ -1,4 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { installOpenCodeFetchPatch } from "./src/fetch-patch.ts";
 import { createSessionId } from "./src/identifier.ts";
 import {
   ANONYMOUS_API_KEY,
@@ -15,6 +16,11 @@ import {
  */
 export default function opencodeAuth(pi: ExtensionAPI): void {
   let sessionId = createSessionId();
+
+  // Covers requests that never reach `before_provider_headers` (summarization
+  // via `modelRegistry.complete`), which otherwise lose the CLI identity and
+  // are refused by Zen's free tier.
+  installOpenCodeFetchPatch(() => sessionId);
 
   pi.on("session_start", async (_event, ctx) => {
     sessionId = createSessionId();
